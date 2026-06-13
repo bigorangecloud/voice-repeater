@@ -100,6 +100,23 @@ SoundTouch 的音高移位基于「重采样 + 时间拉伸」，共振峰会随
 - [Silero Team](https://github.com/snakers4/silero-vad) —— 高质量、轻量的开源语音活动检测模型
 - [Olli Parviainen / SoundTouch](https://codeberg.org/soundtouch/soundtouch) —— 开源音高/语速变换库
 
+## 版本与发布
+
+本项目遵循[语义化版本 SemVer](https://semver.org/lang/zh-CN/)：`主版本.次版本.修订号`。
+
+| 改动 | 下一版 | 例子 |
+|------|--------|------|
+| 修 bug / 小调整，行为不变 | 升 **修订号** | `1.0.0` → `1.0.1` |
+| 新增向下兼容的功能 | 升 **次版本** | `1.0.0` → `1.1.0` |
+| 不兼容的大改动 / 重构 | 升 **主版本** | `1.x` → `2.0.0` |
+
+发布步骤：
+
+1. 在 `app/build.gradle.kts` 更新 `versionName`，并把 **`versionCode` 加 1**（Android 靠 `versionCode` 判断升级，重复会导致无法安装）。
+2. 构建签名包：`.\gradlew.bat assembleRelease`
+3. 打一个与版本一致的 git tag（如 `v1.1.0`）并推送。
+4. 在该 tag 上创建 GitHub Release，附上 `app-release.apk`。
+
 ## 许可证
 
 本项目主体采用 **MIT License**，详见 [LICENSE](LICENSE)。

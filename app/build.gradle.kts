@@ -13,8 +13,13 @@ android {
         applicationId = "com.example.silero"
         minSdk = 24
         targetSdk = 34
+        // 版本号遵循语义化版本 SemVer：versionName = "主.次.修订"。
+        // 每次发布必须把 versionCode +1（系统据此判断升级），versionName 同步更新：
+        //   修 bug  -> 1.0.1（versionCode 2）
+        //   加功能  -> 1.1.0（versionCode 3）
+        //   大变更  -> 2.0.0
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         ndk {
             // SoundTouch JNI 编译的目标 ABI
