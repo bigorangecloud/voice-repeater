@@ -7,6 +7,12 @@ local.properties
 
 # Log/OS Files
 *.log
+build_log*.txt
+
+# Dev notes (not part of the app)
+task_plan.md
+progress.md
+findings.md
 
 # Android Studio generated files and folders
 captures/
