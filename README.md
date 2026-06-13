@@ -1,51 +1,105 @@
-# Silero 变声复读机
+# Silero Voice-Changer Repeater
 
-一个 Android App：你说一句话，应用通过 **Silero VAD** 检测到你说完后，自动把这句话**变声复读**出来。支持原声 / 男声 / 女声 / 婴儿声预设，音高、语速、断句灵敏度均可调。
+![Platform](https://img.shields.io/badge/platform-Android-3DDC84)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![minSdk](https://img.shields.io/badge/minSdk-24-orange)
 
-## 工作原理
+**English** | [简体中文](README.zh-CN.md)
+
+An Android app that listens while you speak, uses **Silero VAD** to detect when you finish a sentence, then automatically **replays it with a changed voice**. Switch between original / male / female / baby presets, and tune pitch, tempo, endpoint sensitivity, mic sensitivity, and playback delay in real time.
+
+## Features
+
+- 🎙️ **Real-time endpoint detection** powered by Silero VAD (ONNX) — automatically detects "end of sentence"
+- 🗣️ **Voice-changed repeat** — once a full utterance is detected, it is pitch/tempo-shifted via SoundTouch and played back
+- 🎚️ **Voice presets** — original / male / female / baby, one tap to switch
+- 🎛️ **Tunable parameters** (sliders, applied live):
+  - Pitch (−12 to +12 semitones)
+  - Tempo (0.5x to 2.0x)
+  - Silence tail for endpointing (300–1500 ms)
+  - Mic sensitivity (VAD input gain 1x–30x, adapts to different devices' recording levels)
+  - Playback delay (0–3000 ms)
+- 🔁 **One-tap reset to defaults**
+- 🔇 **Strict half-duplex** — no detection during playback; waits for echo to decay before re-arming, avoiding loudspeaker self-feedback loops
+
+## How it works
 
 ```
-麦克风 → AudioRecord(16kHz/单声道/PCM16)
-       → Silero VAD (ONNX, 每 512 采样=32ms 输出语音概率)
-       → 端点检测 (进入阈值/退出阈值/尾部静音判定"说完")
-       → 缓存整句 PCM
-       → SoundTouch 变声 (音高+语速移位, JNI/C++)
-       → AudioTrack 回放
+Microphone → AudioRecord (16kHz / mono / PCM16)
+           → Silero VAD (ONNX, speech probability every 512 samples = 32ms)
+           → Endpoint detection (enter/exit thresholds + trailing silence = "done")
+           → Buffer the whole utterance as PCM
+           → SoundTouch voice change (pitch + tempo shift, JNI/C++)
+           → AudioTrack playback
 ```
 
-回放期间会暂停录音，避免把自己的声音再录进去。
+Recording is paused during playback so the app doesn't re-record its own output.
 
-## 模块
+## Screenshots
 
-| 文件 | 职责 |
+![Main screen](docs/screenshot-main.png)
+
+## Download
+
+Prebuilt APKs are published on the [Releases](https://github.com/bigorangecloud/voice-repeater/releases) page. Or build it yourself (see [Build](#build)).
+
+## Modules
+
+| File | Responsibility |
 |------|------|
-| `audio/SileroVad.kt` | Silero VAD v5 ONNX 推理封装 |
-| `audio/RepeatEngine.kt` | 录音 + VAD 端点检测 + 触发变声回放的核心循环 |
-| `audio/VoiceChanger.kt` | 对整段 PCM 应用变声参数 |
-| `audio/SoundTouch.kt` | SoundTouch JNI 的 Kotlin 封装 |
-| `audio/VoiceParams.kt` | 变声参数与预设音色 |
-| `audio/AudioPlayer.kt` | AudioTrack PCM 回放 |
-| `cpp/soundtouch_jni.cpp` | 自定义 JNI：内存中处理 PCM short 数组 |
-| `cpp/soundtouch/` | SoundTouch 核心 C++ 源码（官方 codeberg 镜像） |
-| `MainViewModel.kt` / `*.kt(UI)` | Compose 界面与状态 |
+| `audio/SileroVad.kt` | Silero VAD v5 ONNX inference wrapper |
+| `audio/RepeatEngine.kt` | Core loop: recording + VAD endpointing + triggering voice-change playback |
+| `audio/VoiceChanger.kt` | Applies voice parameters to a full PCM segment |
+| `audio/SoundTouch.kt` | Kotlin wrapper over the SoundTouch JNI |
+| `audio/VoiceParams.kt` | Voice parameters and preset timbres |
+| `audio/AudioPlayer.kt` | AudioTrack PCM playback |
+| `cpp/soundtouch_jni.cpp` | Custom JNI: processes PCM short arrays in memory |
+| `cpp/soundtouch/` | SoundTouch core C++ sources (official codeberg mirror) |
+| `MainViewModel.kt` / `*.kt (UI)` | Compose UI and state |
 
-## 关于"变声"的技术说明
+## A note on "voice changing"
 
-SoundTouch 的音高移位基于「重采样 + 时间拉伸」，共振峰会随音高一起移动——这正是男/女/婴儿声听感差异的自然来源，因此本应用用**音高(半音) + 语速**两个真实可控维度塑造音色，而非伪造独立的共振峰移位。
+SoundTouch's pitch shifting is based on "resampling + time-stretching", so formants move together with pitch — which is exactly the natural source of the male/female/baby timbre difference. This app therefore shapes timbre using two real, controllable dimensions — **pitch (semitones) + tempo** — rather than faking independent formant shifting.
 
-## 构建
+## Requirements & permissions
 
-依赖本机：Android SDK（含 NDK 26.x、CMake 3.22.1、platform-34）。
+- Android 7.0 (API 24) or higher
+- Requires the **microphone permission** (`RECORD_AUDIO`) at runtime — used to record and detect speech
+
+## Build
+
+Requires a local Android SDK (with NDK 26.x, CMake 3.22.1, platform-34).
 
 ```powershell
-# 直接命令行构建（JAVA_HOME 指向 JDK 17+）
+# Command-line build (JAVA_HOME pointing at JDK 17+)
 .\gradlew.bat assembleDebug
-# 产物：app\build\outputs\apk\debug\app-debug.apk
+# Output: app\build\outputs\apk\debug\app-debug.apk
 ```
 
-或用 Android Studio 直接打开本目录，等待 Gradle sync 后点 Run。
+Or open this directory in Android Studio, wait for Gradle sync, and hit Run.
 
-## 资源来源
+## Known limitations
 
-- Silero VAD 模型：https://github.com/snakers4/silero-vad （`app/src/main/assets/silero_vad.onnx`）
-- SoundTouch：https://codeberg.org/soundtouch/soundtouch （LGPL）
+- **Recording levels vary a lot across devices**: some devices (e.g. Huawei/Honor) apply aggressive system noise suppression that pushes the recording level very low, so detection may be insensitive at the default. If you hit "speaking does nothing", raise the **Mic sensitivity** slider; on devices with normal levels you can lower it to reduce false triggers.
+- **Loudspeaker echo**: at higher volumes the playback can be re-picked up by the mic. The app already does half-duplex + echo-decay handling, but **using headphones** physically eliminates the coupling for the cleanest experience.
+- Voice changing is based on pitch+tempo transformation, not independent formant modeling; audio quality degrades at extreme settings.
+
+## Contributing
+
+Issues and PRs are welcome. Suggested flow:
+
+1. Fork the repo and create a branch (`feature/xxx` or `fix/xxx`)
+2. Keep the code style consistent with the existing code (official Kotlin style + Compose)
+3. Verify the record / detect / playback pipeline works on a real device
+4. Open a PR describing the change and how you tested it
+
+## Acknowledgements
+
+- [Silero Team](https://github.com/snakers4/silero-vad) — a high-quality, lightweight open-source voice activity detection model
+- [Olli Parviainen / SoundTouch](https://codeberg.org/soundtouch/soundtouch) — open-source pitch/tempo transformation library
+
+## License
+
+This project is mainly licensed under the **MIT License** — see [LICENSE](LICENSE).
+
+> ⚠️ **Third-party license notice**: the SoundTouch sources under `app/src/main/cpp/soundtouch/` are licensed under **LGPL v2.1** and are **not** covered by MIT; their copyright belongs to the original author. If you distribute this app or derivative works, you must comply with the LGPL obligations (retain the copyright and license notices, allow end users to replace that library, etc.). The Silero VAD model follows the license of its upstream repository.
