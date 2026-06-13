@@ -37,7 +37,9 @@ Recording is paused during playback so the app doesn't re-record its own output.
 
 ## Screenshots
 
-![Main screen](docs/screenshot-main.png)
+<p align="center">
+  <img src="docs/screenshot-main.png" alt="Main screen" width="300">
+</p>
 
 ## Download
 

@@ -37,7 +37,9 @@
 
 ## 截图
 
-![主界面](docs/screenshot-main.png)
+<p align="center">
+  <img src="docs/screenshot-main.png" alt="主界面" width="300">
+</p>
 
 ## 下载
 
