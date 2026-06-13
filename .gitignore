@@ -32,6 +32,8 @@ render.experimental.xml
 # Keystore files
 *.jks
 *.keystore
+# 例外：开源测试用签名密钥（公开，无保密价值）
+!app/release.keystore
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json

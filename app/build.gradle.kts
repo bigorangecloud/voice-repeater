@@ -27,9 +27,22 @@ android {
         }
     }
 
+    signingConfigs {
+        // 注意：仅用于开源测试，keystore 与密码随仓库公开。
+        // 正式商用项目不应把签名信息写进仓库。
+        create("release") {
+            storeFile = file("release.keystore")
+            storePassword = "123456"
+            keyAlias = "repeater"
+            keyPassword = "123456"
+        }
+    }
+
     buildTypes {
         release {
+            // 关闭混淆：避免 R8 误删 JNI/native 方法，对小工具体积收益也不大
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
